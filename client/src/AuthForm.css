@@ -1,0 +1,81 @@
+.auth-container {
+  max-width: 400px;
+  margin: 60px auto;
+  padding: 30px;
+  background: white;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  border-radius: 12px;
+  opacity: 0;
+  transform: translateX(100%);
+  transition: transform 0.5s ease, opacity 0.5s ease;
+}
+
+/* Slide in to center */
+.auth-container.slide-in {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Slide out to right */
+.auth-container.slide-out {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.auth-form h2 {
+  margin-bottom: 20px;
+  color: #1abc9c;
+  text-align: center;
+}
+
+.auth-form label {
+  display: block;
+  margin: 15px 0 5px 0;
+  font-weight: 600;
+  color: #555;
+}
+
+.auth-form input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  font-size: 16px;
+}
+
+.auth-form button {
+  margin-top: 25px;
+  width: 100%;
+  background-color: #1abc9c;
+  border: none;
+  color: white;
+  font-weight: bold;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.auth-form button:hover {
+  background-color: #16a085;
+}
+
+.redirect-text {
+  margin-top: 15px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+/* This assumes your .auth-container is inside a full viewport height container */
+.auth-wrapper {
+  display: flex;
+  justify-content: center;   /* center horizontally */
+  align-items: center;       /* center vertically */
+  height: 100vh;             /* full viewport height */
+  background-color: #f5f6fa; /* subtle background, change as needed */
+  padding: 20px;
+  box-sizing: border-box;
+
+}
+
