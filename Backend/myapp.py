@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
@@ -13,7 +13,7 @@ import logging
 from models import db, User, MoodEntry, Therapist, TherapistAvailability, Booking, Resource, EmergencyContact
 
 # ---------------- App setup ----------------
-app = Flask(__name__)
+app = Flask(__name__, static_folder='../client/build', static_url_path='/')
 CORS(app)
 bcrypt = Bcrypt(app)
 
@@ -34,8 +34,18 @@ migrate = Migrate(app, db)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Default external resources URL (replace with a real provider if you have one)
+# Default external resources URL
 EXTERNAL_RESOURCES_URL = "https://example.com/api/mental-health-resources"
+
+# ---------------- React Frontend ----------------
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve(path):
+    """Serve React frontend"""
+    if path != "" and os.path.exists(app.static_folder + '/' + path):
+        return send_from_directory(app.static_folder, path)
+    else:
+        return send_from_directory(app.static_folder, 'index.html')
 
 # ---------------- Therapist APIs ----------------
 @app.route('/api/therapists', methods=['GET'])
@@ -202,7 +212,7 @@ def get_moods():
     user_email = get_jwt_identity()
     user = User.query.filter_by(email=user_email).first()
     if not user:
-        return jsonify([]), 200  # Or 404 if preferred
+        return jsonify([]), 200
 
     moods = MoodEntry.query.filter_by(user_id=user.id).order_by(MoodEntry.timestamp.desc()).all()
 
@@ -292,7 +302,7 @@ def protected():
     current_user = get_jwt_identity()
     return jsonify(logged_in_as=current_user), 200
 
-# ---------------- Resource Library APIs (updated & extended) ----------------
+# ---------------- Resource Library APIs ----------------
 @app.route('/api/resources', methods=['GET'])
 def get_resources():
     resources = Resource.query.order_by(Resource.created_at.desc()).all()
@@ -335,6 +345,5 @@ def add_resource():
 
 # ---------------- Run App ----------------
 if __name__ == '__main__':
-    # ✅ Use Railway's dynamic port and accept external connections
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
