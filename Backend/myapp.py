@@ -37,9 +37,7 @@ logger = logging.getLogger(__name__)
 # Default external resources URL (replace with a real provider if you have one)
 EXTERNAL_RESOURCES_URL = "https://example.com/api/mental-health-resources"
 
-
 # ---------------- Therapist APIs ----------------
-
 @app.route('/api/therapists', methods=['GET'])
 def get_therapists():
     therapists = Therapist.query.all()
@@ -61,9 +59,7 @@ def get_therapists():
         })
     return jsonify(result)
 
-
 # ---------------- Booking APIs ----------------
-
 @app.route('/api/bookings', methods=['POST'])
 @jwt_required()
 def create_booking():
@@ -105,7 +101,6 @@ def create_booking():
         "slot": slot
     }}), 201
 
-
 @app.route('/api/bookings', methods=['GET'])
 @jwt_required()
 def get_user_bookings():
@@ -128,7 +123,6 @@ def get_user_bookings():
         })
     return jsonify(data)
 
-
 @app.route('/api/bookings/<int:booking_id>', methods=['DELETE'])
 @jwt_required()
 def delete_booking(booking_id):
@@ -144,7 +138,6 @@ def delete_booking(booking_id):
     db.session.delete(booking)
     db.session.commit()
     return jsonify({"message": "Booking cancelled successfully"}), 200
-
 
 @app.route('/api/bookings/<int:booking_id>', methods=['PUT'])
 @jwt_required()
@@ -181,9 +174,7 @@ def update_booking(booking_id):
 
     return jsonify({"message": "Booking updated successfully"}), 200
 
-
 # ---------------- Mood Entry APIs ----------------
-
 @app.route('/api/mood', methods=['POST'])
 @jwt_required()
 def add_mood():
@@ -205,7 +196,6 @@ def add_mood():
 
     return jsonify({'message': 'Mood entry saved'}), 201
 
-
 @app.route('/api/moods', methods=['GET'])
 @jwt_required()
 def get_moods():
@@ -225,7 +215,6 @@ def get_moods():
 
     return jsonify(result), 200
 
-
 @app.route('/api/mood/<int:mood_id>', methods=['DELETE'])
 @jwt_required()
 def delete_mood(mood_id):
@@ -241,7 +230,6 @@ def delete_mood(mood_id):
     db.session.delete(mood_entry)
     db.session.commit()
     return jsonify({'message': 'Mood entry deleted'}), 200
-
 
 @app.route('/api/mood/<int:mood_id>', methods=['PUT'])
 @jwt_required()
@@ -267,9 +255,7 @@ def update_mood(mood_id):
     db.session.commit()
     return jsonify({'message': 'Mood entry updated'}), 200
 
-
 # ---------------- User Auth ----------------
-
 @app.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
@@ -287,7 +273,6 @@ def register():
 
     return jsonify({'msg': 'User registered successfully'}), 201
 
-
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -301,21 +286,17 @@ def login():
     access_token = create_access_token(identity=email, expires_delta=timedelta(hours=1))
     return jsonify({'access_token': access_token}), 200
 
-
 @app.route('/protected', methods=['GET'])
 @jwt_required()
 def protected():
     current_user = get_jwt_identity()
     return jsonify(logged_in_as=current_user), 200
 
-
 # ---------------- Resource Library APIs (updated & extended) ----------------
-
 @app.route('/api/resources', methods=['GET'])
 def get_resources():
     resources = Resource.query.order_by(Resource.created_at.desc()).all()
     return jsonify([r.to_dict() for r in resources]), 200
-
 
 @app.route('/api/resources', methods=['POST'])
 @jwt_required()
@@ -324,7 +305,6 @@ def add_resource():
     if not data.get('title') or not data.get('url'):
         return jsonify({"error": "title and url are required"}), 400
 
-    # convert tags array -> csv if necessary
     tags_field = data.get('tags')
     if isinstance(tags_field, list):
         tags_csv = ",".join([str(t).strip() for t in tags_field if str(t).strip()])
@@ -353,207 +333,8 @@ def add_resource():
 
     return jsonify({"message": "Resource added successfully", "id": resource.id}), 201
 
-
-@app.route('/api/resources/fetch', methods=['POST'])
-@jwt_required()
-def fetch_and_store_resources():
-    """
-    Fetch resources from a third-party API (URL provided in JSON body 'url' or fallback to EXTERNAL_RESOURCES_URL).
-    For each item returned (expects array of resource-like objects), we attempt to insert into Resource table
-    if no resource with same URL exists.
-    """
-    body = request.get_json(silent=True) or {}
-    external_url = body.get('url') or EXTERNAL_RESOURCES_URL
-    max_items = int(body.get('max_items', 50))
-
-    try:
-        resp = requests.get(external_url, timeout=10)
-    except Exception as e:
-        logger.exception("External fetch failed")
-        return jsonify({"error": "Failed to fetch external resources", "details": str(e)}), 500
-
-    if resp.status_code != 200:
-        return jsonify({"error": "External API returned non-200", "status": resp.status_code}), 502
-
-    try:
-        items = resp.json()
-    except Exception as e:
-        logger.exception("Failed parsing external JSON")
-        return jsonify({"error": "Invalid JSON from external API", "details": str(e)}), 502
-
-    if not isinstance(items, list):
-        # If provider returns a dict with a list under key like 'data', try that
-        if isinstance(items, dict) and 'data' in items and isinstance(items['data'], list):
-            items = items['data']
-        else:
-            return jsonify({"error": "External API did not return a list of resources"}), 502
-
-    created = []
-    skipped = []
-    processed = 0
-
-    for it in items:
-        if processed >= max_items:
-            break
-        processed += 1
-
-        # Map expected fields from external item to our Resource fields (best-effort)
-        title = it.get('title') or it.get('headline') or it.get('name')
-        url = it.get('url') or it.get('link')
-        if not url or not title:
-            skipped.append({"reason": "missing title or url", "item": it})
-            continue
-
-        # check existing by url
-        existing = Resource.query.filter_by(url=url).first()
-        if existing:
-            skipped.append({"url": url, "reason": "exists"})
-            continue
-
-        summary = it.get('summary') or it.get('description') or it.get('excerpt') or ""
-        source = it.get('source') or it.get('publisher') or ""
-        resource_type = it.get('resource_type') or it.get('type') or "article"
-
-        tags_field = it.get('tags') or it.get('keywords') or []
-        if isinstance(tags_field, list):
-            tags_csv = ",".join([str(t).strip() for t in tags_field if str(t).strip()])
-        else:
-            tags_csv = str(tags_field or "")
-
-        published_at = None
-        if it.get('published_at'):
-            try:
-                published_at = datetime.fromisoformat(it['published_at'])
-            except Exception:
-                published_at = None
-
-        # Create Resource
-        try:
-            r = Resource(
-                title=title,
-                summary=summary,
-                url=url,
-                source=source,
-                resource_type=resource_type,
-                tags=tags_csv,
-                published_at=published_at,
-                verified=False
-            )
-            db.session.add(r)
-            db.session.flush()  # get id without commit
-            created.append({"id": r.id, "url": url})
-        except Exception as e:
-            logger.exception("Failed to create Resource row")
-            skipped.append({"url": url, "reason": f"db error: {str(e)}"})
-            db.session.rollback()
-            continue
-
-    # commit all created rows
-    try:
-        db.session.commit()
-    except Exception as e:
-        logger.exception("Final commit failed")
-        db.session.rollback()
-        return jsonify({"error": "Failed to save fetched resources", "details": str(e)}), 500
-
-    return jsonify({
-        "message": "Fetch complete",
-        "processed": processed,
-        "created_count": len(created),
-        "created": created,
-        "skipped": skipped
-    }), 200
-
-# Get all emergency contacts for current user
-@app.route('/api/emergency-contacts', methods=['GET'])
-@jwt_required()
-def get_emergency_contacts():
-    user_email = get_jwt_identity()
-    user = User.query.filter_by(email=user_email).first()
-    if not user:
-        return jsonify({"error": "User not found"}), 404
-
-    contacts = EmergencyContact.query.filter_by(user_id=user.id).all()
-    return jsonify([{
-        "id": c.id,
-        "name": c.name,
-        "phone": c.phone,
-        "email": c.email,
-        "relationship": c.relationship
-    } for c in contacts])
-
-# Add a new emergency contact
-@app.route('/api/emergency-contacts', methods=['POST'])
-@jwt_required()
-def add_emergency_contact():
-    user_email = get_jwt_identity()
-    user = User.query.filter_by(email=user_email).first()
-    if not user:
-        return jsonify({"error": "User not found"}), 404
-
-    data = request.json
-    name = data.get("name")
-    phone = data.get("phone")
-    email = data.get("email")
-    relationship = data.get("relationship")
-
-    if not name or not phone:
-        return jsonify({"error": "Name and phone are required"}), 400
-
-    contact = EmergencyContact(
-        user_id=user.id,
-        name=name,
-        phone=phone,
-        email=email,
-        relationship=relationship,
-    )
-    db.session.add(contact)
-    db.session.commit()
-    return jsonify({"msg": "Emergency contact added", "id": contact.id}), 201
-
-# Delete an emergency contact
-@app.route('/api/emergency-contacts/<int:id>', methods=['DELETE'])
-@jwt_required()
-def delete_emergency_contact(id):
-    user_email = get_jwt_identity()
-    user = User.query.filter_by(email=user_email).first()
-    if not user:
-        return jsonify({"error": "User not found"}), 404
-
-    contact = EmergencyContact.query.filter_by(id=id, user_id=user.id).first()
-    if not contact:
-        return jsonify({"error": "Contact not found"}), 404
-
-    db.session.delete(contact)
-    db.session.commit()
-    return jsonify({"msg": "Emergency contact deleted"}), 200
-
-# Send SOS alert
-@app.route("/api/sos", methods=["POST"])
-@jwt_required()
-def send_sos():
-    user_email = get_jwt_identity()
-
-    # fetch emergency contacts for this user
-    user = User.query.filter_by(email=user_email).first()
-    contacts = []
-    if user:
-        contacts = EmergencyContact.query.filter_by(user_id=user.id).all()
-
-    # For now, just simulate sending SOS and return list of contacts we would notify
-    sos_message = {
-        "status": "success",
-        "message": f"SOS alert sent for {user_email}!",
-        "timestamp": datetime.utcnow().isoformat(),
-        "notified_contacts": [{"name": c.name, "phone": c.phone, "email": c.email} for c in contacts]
-    }
-
-    # TODO: integrate real notification channels (SMS/email/push) here
-
-    return jsonify(sos_message), 200
-
-
 # ---------------- Run App ----------------
-
 if __name__ == '__main__':
-    app.run(debug=True)
+    # ✅ Use Railway's dynamic port and accept external connections
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
