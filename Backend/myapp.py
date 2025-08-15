@@ -13,7 +13,7 @@ import logging
 from models import db, User, MoodEntry, Therapist, TherapistAvailability, Booking, Resource, EmergencyContact
 
 # ---------------- App setup ----------------
-app = Flask(__name__, static_folder='../client/build', static_url_path='/')
+app = Flask(__name__, static_folder='client/build', static_url_path='/')
 CORS(app)
 bcrypt = Bcrypt(app)
 
