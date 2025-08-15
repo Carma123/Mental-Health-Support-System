@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/Mental-Health-Support-System/static/css/main.ef01b94e.css",
+    "main.js": "/Mental-Health-Support-System/static/js/main.d4a7be07.js",
+    "index.html": "/Mental-Health-Support-System/index.html",
+    "main.ef01b94e.css.map": "/Mental-Health-Support-System/static/css/main.ef01b94e.css.map",
+    "main.d4a7be07.js.map": "/Mental-Health-Support-System/static/js/main.d4a7be07.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.ef01b94e.css",
+    "static/js/main.d4a7be07.js"
+  ]
+}
