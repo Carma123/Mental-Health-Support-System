@@ -13,6 +13,9 @@ function Login() {
 
   const { login } = useContext(AuthContext);  // Get login function from context
 
+  // ✅ Use env variable or fallback to localhost
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:5000';
+
   useEffect(() => {
     const timer = setTimeout(() => setVisible(true), 100);
     return () => clearTimeout(timer);
@@ -24,7 +27,7 @@ function Login() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://127.0.0.1:5000/login', {
+      const response = await fetch(`${API_BASE_URL}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
