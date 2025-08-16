@@ -3,7 +3,11 @@ import React, { useState } from "react";
 export default function SOSButton() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
+  const [hover, setHover] = useState(false);
   const token = localStorage.getItem("token");
+
+  // Use environment variable for API URL
+  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
   const sendSOS = () => {
     if (!window.confirm("Are you sure you want to send an SOS alert?")) return;
@@ -18,9 +22,12 @@ export default function SOSButton() {
       (pos) => {
         const { latitude, longitude } = pos.coords;
 
-        fetch("http://localhost:5000/api/sos",{
+        fetch(`${API_URL}/api/sos`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          headers: { 
+            "Content-Type": "application/json", 
+            Authorization: `Bearer ${token}` 
+          },
           body: JSON.stringify({ location: `Lat: ${latitude}, Long: ${longitude}` }),
         })
           .then((res) => res.json())
@@ -66,8 +73,6 @@ export default function SOSButton() {
       textShadow: "0 0 5px rgba(255, 0, 0, 0.7)",
     },
   };
-
-  const [hover, setHover] = useState(false);
 
   return (
     <div style={styles.container}>

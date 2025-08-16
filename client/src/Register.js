@@ -13,6 +13,9 @@ function Register() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Use environment variable for backend URL
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:5000';
+
   useEffect(() => {
     const timer = setTimeout(() => setVisible(true), 100);
     return () => clearTimeout(timer);
@@ -28,7 +31,7 @@ function Register() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://127.0.0.1:5000/register', {
+      const response = await fetch(`${API_BASE_URL}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { FaCalendarAlt, FaClock, FaCheckCircle, FaTimesCircle, FaUserCircle } from "react-icons/fa";
 import "./Therapists.css";
 
+// Use environment variable or fallback to localhost
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 const Therapists = () => {
   const [therapists, setTherapists] = useState([]);
   const [bookedSlots, setBookedSlots] = useState({});
@@ -11,7 +14,7 @@ const Therapists = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/therapists")
+    fetch(`${API_URL}/api/therapists`)
       .then((res) => {
         if (!res.ok) throw new Error(`Failed to load therapists. Status: ${res.status}`);
         return res.json();
@@ -24,9 +27,8 @@ const Therapists = () => {
       });
   }, []);
 
-  // Fetch user bookings on mount or after booking
   const fetchUserBookings = () => {
-    fetch("http://localhost:5000/api/bookings", {
+    fetch(`${API_URL}/api/bookings`, {
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     })
       .then((res) => {
@@ -36,7 +38,6 @@ const Therapists = () => {
       .then((data) => {
         const booked = {};
         data.forEach((b) => {
-          // NOTE: your backend response must include therapist_id, day, slot
           booked[`${b.therapist_id}_${b.day}_${b.slot}`] = true;
         });
         setBookedSlots(booked);
@@ -72,7 +73,7 @@ const Therapists = () => {
 
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/bookings", {
+      const res = await fetch(`${API_URL}/api/bookings`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

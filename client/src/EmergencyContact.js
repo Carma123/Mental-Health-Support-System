@@ -7,7 +7,8 @@ export default function EmergencyContacts() {
   const [form, setForm] = useState({ name: "", phone: "", email: "", relationship: "" });
   const token = localStorage.getItem("token");
 
-  const API_BASE_URL = "http://localhost:5000";
+  // Use environment variable
+  const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
   useEffect(() => {
     const fetchContacts = async () => {
@@ -27,7 +28,7 @@ export default function EmergencyContacts() {
     };
 
     fetchContacts();
-  }, [token]);
+  }, [token, API_BASE_URL]);
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -46,6 +47,7 @@ export default function EmergencyContacts() {
 
       setForm({ name: "", phone: "", email: "", relationship: "" });
 
+      // Refresh contacts
       const updatedRes = await fetch(`${API_BASE_URL}/api/emergency-contacts`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -143,67 +145,12 @@ export default function EmergencyContacts() {
 }
 
 const styles = {
-  container: {
-    maxWidth: 600,
-    margin: "20px auto",
-    padding: 20,
-    backgroundColor: "#f9f9f9",
-    borderRadius: 8,
-    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-    fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-  },
-  heading: {
-    textAlign: "center",
-    color: "#333",
-  },
-  form: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: 12,
-    marginBottom: 20,
-    justifyContent: "space-between",
-  },
-  input: {
-    flex: "1 1 45%",
-    padding: "10px 12px",
-    fontSize: 16,
-    borderRadius: 4,
-    border: "1px solid #ccc",
-  },
-  addButton: {
-    flex: "1 1 100%",
-    padding: "12px 0",
-    backgroundColor: "#007bff",
-    color: "white",
-    border: "none",
-    borderRadius: 4,
-    cursor: "pointer",
-    fontSize: 18,
-    fontWeight: "600",
-    transition: "background-color 0.3s ease",
-  },
-  list: {
-    listStyleType: "none",
-    paddingLeft: 0,
-  },
-  listItem: {
-    display: "flex",
-    justifyContent: "space-between",
-    padding: "12px 16px",
-    marginBottom: 8,
-    backgroundColor: "#fff",
-    borderRadius: 4,
-    boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-    alignItems: "center",
-  },
-  deleteButton: {
-    backgroundColor: "#dc3545",
-    border: "none",
-    color: "white",
-    padding: "6px 12px",
-    borderRadius: 4,
-    cursor: "pointer",
-    fontWeight: "600",
-    fontSize: 14,
-  },
+  container: { maxWidth: 600, margin: "20px auto", padding: 20, backgroundColor: "#f9f9f9", borderRadius: 8, boxShadow: "0 2px 8px rgba(0,0,0,0.1)", fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" },
+  heading: { textAlign: "center", color: "#333" },
+  form: { display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 20, justifyContent: "space-between" },
+  input: { flex: "1 1 45%", padding: "10px 12px", fontSize: 16, borderRadius: 4, border: "1px solid #ccc" },
+  addButton: { flex: "1 1 100%", padding: "12px 0", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 18, fontWeight: "600", transition: "background-color 0.3s ease" },
+  list: { listStyleType: "none", paddingLeft: 0 },
+  listItem: { display: "flex", justifyContent: "space-between", padding: "12px 16px", marginBottom: 8, backgroundColor: "#fff", borderRadius: 4, boxShadow: "0 1px 3px rgba(0,0,0,0.1)", alignItems: "center" },
+  deleteButton: { backgroundColor: "#dc3545", border: "none", color: "white", padding: "6px 12px", borderRadius: 4, cursor: "pointer", fontWeight: "600", fontSize: 14 },
 };

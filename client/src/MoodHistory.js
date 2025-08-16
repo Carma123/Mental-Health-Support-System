@@ -4,6 +4,9 @@ import {
   LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer
 } from 'recharts';
 
+// Use environment variable or fallback to localhost
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 // Mood scale to assign importance or severity level
 const moodScale = {
   angry: 1,
@@ -74,7 +77,7 @@ const MoodHistory = () => {
   const fetchMoods = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/moods', {
+      const response = await axios.get(`${API_URL}/api/moods`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -105,7 +108,7 @@ const MoodHistory = () => {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:5000/api/mood/${id}`, {
+      await axios.delete(`${API_URL}/api/mood/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMoods(prev => prev.filter(entry => entry.id !== id));
